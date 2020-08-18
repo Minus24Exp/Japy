@@ -1,56 +1,89 @@
-from enum import Enum, unique
+import enum
+from typing import Union, Tuple, List
 
-@unique
-class TokenType(Enum):
-    Null = 0
-    Bool = 1
-    Int = 2
-    Float = 3
-    String = 4
-    Op = 5
-    Kw = 6
-    Id = 7
-    Nl = 8
-    Eof = 9
+token_type = [
+    'Null', 'Bool', 'Int', 'Float', 'String', 'Op', 'Kw', 'Id', 'Nl', 'Eof'
+]
 
-@unique
-class NumType(Enum):
-    Int = 0
-    Float = 1
-    Bin = 2
-    Hex = 3
+TokenType = enum.Enum('TokenType', token_type)
 
-@unique
-class Operator(Enum):
-    Assign = 0,
+num_type = [
+    'Int', 'Float', 'Bin', 'Hex'
+]
 
-    AddAssign = 1, SubAssign = 2, MulAssign = 3, DivAssign = 4, ModAssign = 5, ExpAssign = 6,
+NumType = enum.Enum('NumType', num_type)
 
-    Add = 7, Sub = 8, Mul = 9, Div = 10, Mod = 11, Exp = 12,
+operators = {
+    'Assign': '=',
 
-    LParen = 13, RParen = 14,
-    LBrace = 15, RBrace = 16,
-    LBracket = 17, RBracket = 18,
+    'AddAssign': '+=', 'SubAssign': '-=', 'MulAssign': '*=', 'DivAssign': '/=', 'ModAssign': '%=', 'ExpAssign': '**=',
 
-    Comma = 19, Colon = 20, Dot = 21,
+    'Add': '+', 'Sub': '-', 'Mul': '*', 'Div': '/', 'Mod': '%', 'Exp': '**',
 
-    Semi = 22,
+    'LParen': '(', 'RParen': ')',
+    'LBrace': '{', 'RBrace': '}',
+    'LBracket': '[', 'RBracket': ']',
 
-    Or = 23, And = 24,
+    'Comma': ',', 'Colon': ':', 'Dot': '.',
 
-    Not = 25, Eq = 26, NotEq = 27,
-    LT = 28, GT = 29, LE = 30, GE = 31,
+    'Semi': ';',
 
-    RefEq = 32, RefNotEq = 33,
+    'Or': '||', 'And': '&&',
 
-    Range = 34, RangeLE = 35, RangeRE = 36, RangeBothE = 37,
+    'Not': '!', 'Eq': '==', 'NotEq': '!=',
+    'LT': '<', 'GT': '>', 'LE': '<=', 'GE': '>=',
 
-    Arrow = 38,
+    'RefEq': '===', 'RefNotEq': '!==',
 
-    Is = 39, NotIs = 40,
-    In = 41, NotIn = 42,
+    'Range': '..', 'RangeLE': '>..', 'RangeRE': '..<', 'RangeBothE': '>.<',
 
-    As = 43,
+    'Arrow': '=>',
 
-    Pipe = 44
+    'Is': 'is', 'NotIs': '!is',
+    'In': 'in', 'NotIn': '!in',
 
+    'As': 'as',
+
+    'Pipe': '|>'
+}
+
+Operator = enum.Enum('Operator', operators)
+
+def op_to_str(op: Operator) -> bool:
+    return operators[op.value]
+
+keywords = [
+    'Null',
+    '_true', '_false',
+    'Var', 'Val',
+    'Func', 'Return',
+    'If', 'Elif', 'Else',
+    'While',
+    'Class',
+    'Import',
+    'From',
+    'For',
+    'Type'
+]
+
+Keyword = enum.Enum('Keyword', keywords)
+
+def kw_to_str(kw: Keyword):
+    return keywords[kw]
+
+TokenVal = Union[None, bool, int, float, str, Operator, Keyword]
+
+class Token:
+    _type: TokenType
+    val: TokenVal
+    line = 0
+    column = 0
+
+    def __init__(self, _type: TokenType, val: TokenVal):
+        self._type = _type
+        self.val = val
+
+    def __str__(self):
+        return str(self._type) +' `'+ str(self.val) +'` at '+ str(self.line) +':'+ str(self.column)
+
+TokenList = List[Token]
