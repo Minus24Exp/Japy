@@ -1,6 +1,7 @@
 import sys
 import os.path
 from parser.Lexer import Lexer
+from parser.Parser import Parser
 
 class Jacy:
     debug = False
@@ -32,11 +33,11 @@ class Jacy:
     def run_repl(self):
         while True:
             try:
-                self.run(input('> '))
-            except Exception as err:
-                print('[ERROR]:', err)
-            except EOFError:
-                break
+                self.run(input('> '), 'REPL')
+            except EOFError as e:
+                print('Uncaught eof error', e)
+            except Exception as e:
+                print('[ERROR]:', e)
 
     def run_script(self, path):
         if not os.path.exists(path):
@@ -45,8 +46,13 @@ class Jacy:
 
         file = open(path, mode='r')
 
-        self.run(file.read())
+        # try:
+        self.run(file.read(), path)
+        # except Exception as e:
+        #     print('\u001b[31m', str(e).strip(), '\u001b[0m', sep='')
 
-    def run(self, script: str):
-        tokens = self.lexer.lex(script)
-        print('tokens:', ''.join(str(t) for t in tokens))
+    def run(self, script: str, file_name: str):
+        tokens = self.lexer.lex(script, file_name)
+        print('Tokens:')
+        for t in tokens:
+            print(str(t))

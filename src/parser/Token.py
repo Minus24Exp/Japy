@@ -7,12 +7,6 @@ token_type = [
 
 TokenType = enum.Enum('TokenType', token_type)
 
-num_type = [
-    'Int', 'Float', 'Bin', 'Hex'
-]
-
-NumType = enum.Enum('NumType', num_type)
-
 operators = {
     'Assign': '=',
 
@@ -52,19 +46,19 @@ Operator = enum.Enum('Operator', operators)
 def op_to_str(op: Operator) -> bool:
     return operators[op.value]
 
-keywords = [
-    'Null',
-    '_true', '_false',
-    'Var', 'Val',
-    'Func', 'Return',
-    'If', 'Elif', 'Else',
-    'While',
-    'Class',
-    'Import',
-    'From',
-    'For',
-    'Type'
-]
+keywords = {
+    'Null': 'null',
+    '_true': 'true', '_false': 'false',
+    'Var': 'var', 'Val': 'val',
+    'Func': 'func', 'Return': 'return',
+    'If': 'if', 'Elif': 'elif', 'Else': 'else',
+    'While': 'while',
+    'Class': 'class',
+    'Import': 'import',
+    'From': 'from',
+    'For': 'for',
+    'Type': 'type'
+}
 
 Keyword = enum.Enum('Keyword', keywords)
 
@@ -72,6 +66,9 @@ def kw_to_str(kw: Keyword):
     return keywords[kw]
 
 TokenVal = Union[None, bool, int, float, str, Operator, Keyword]
+
+def pos_to_str(line, column):
+    return str(line) +':'+ str(column)
 
 class Token:
     _type: TokenType
