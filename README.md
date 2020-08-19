@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="img/Japy.png" width="200">    
+    <img src="img/Japy.png" width="300">    
 </p>
 
 # Japy
