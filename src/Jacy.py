@@ -1,7 +1,7 @@
 import sys
 import os.path
-from parser.Lexer import Lexer
-from parser.Parser import Parser
+from .parser.Lexer import Lexer
+from .parser.Parser import Parser
 
 class Jacy:
     debug = False
@@ -36,8 +36,10 @@ class Jacy:
                 self.run(input('> '), 'REPL')
             except EOFError as e:
                 print('Uncaught eof error', e)
-            except Exception as e:
+            except JacyError as e:
                 print('[ERROR]:', e)
+            except Exception as e:
+                print('Uncaught error:', e)
 
     def run_script(self, path):
         if not os.path.exists(path):

@@ -1,8 +1,11 @@
 from .Token import *
+from ..tree.Stmt import *
+from ..tree.Expr import *
 
 class Parser:
     index = 0
     tokens: TokenList = []
+    tree: StmtList = []
 
     def eof(self):
         return self.is_typeof(TokenType.Eof)
@@ -83,4 +86,7 @@ class Parser:
 
     def parse(self, tokens: TokenList):
         self.tokens = tokens
-        tree
+        self.tree = []
+
+        while not self.eof():
+            print(self.peek())
