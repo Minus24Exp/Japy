@@ -8,9 +8,11 @@ class Jacy:
     main_file = ''
 
     lexer: Lexer
+    parser: Parser
 
     def __init__(self):
         self.lexer = Lexer()
+        self.parser = Parser()
 
     def launch(self):
         script_argv = []
@@ -58,3 +60,4 @@ class Jacy:
         print('Tokens:')
         for t in tokens:
             print(str(t))
+        tree = self.parser.parse(tokens)
