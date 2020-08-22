@@ -43,8 +43,10 @@ operators = {
 
 Operator = enum.Enum('Operator', operators)
 
-def op_to_str(op: Operator) -> bool:
-    return operators[op.value]
+
+def op_to_str(op: Operator):
+    return operators[op.name]
+
 
 keywords = {
     'Null': 'null',
@@ -62,25 +64,28 @@ keywords = {
 
 Keyword = enum.Enum('Keyword', keywords)
 
+
 def kw_to_str(kw: Keyword):
     return keywords[kw]
 
+
 TokenVal = Union[None, bool, int, float, str, Operator, Keyword]
 
+
 def pos_to_str(line, column):
-    return str(line) +':'+ str(column)
+    return str(line) + ':' + str(column)
+
 
 class Token:
-    _type: TokenType
-    val: TokenVal
     line = 0
     column = 0
 
-    def __init__(self, _type: TokenType, val: TokenVal):
-        self._type = _type
+    def __init__(self, Type, val):
+        self.Type = Type
         self.val = val
 
     def __str__(self):
-        return str(self._type) +' `'+ str(self.val) +'` at '+ str(self.line) +':'+ str(self.column)
+        return str(self.Type.name) + (' `' + str(self.val) + '`' if self.val else '') + ' at ' + str(self.line) + ':' + str(self.column)
+
 
 TokenList = List[Token]

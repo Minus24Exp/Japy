@@ -1,11 +1,14 @@
 from .Token import *
 
+
 class Lexer:
     index = 0
     script = ''
     tokens: TokenList = []
     line = 0
     column = 0
+    token_line = 0
+    token_column = 0
 
     # name of current file to parse (can be 'REPL')
     file_name = ''
@@ -16,7 +19,7 @@ class Lexer:
 
         return self.script[self.index]
 
-    def peek_next(self, distance = 1):
+    def peek_next(self, distance=1):
         return self.script[self.index + distance]
 
     def advance(self, inc: int = 1):
@@ -30,21 +33,21 @@ class Lexer:
 
         if self.eof():
             return ''
-        
+
         return self.peek()
 
     def eof(self):
         return self.index >= len(self.script)
 
     def add_token(self, token: Token):
-        token.line = self.line
-        token.column = self.column
+        token.line = self.token_line
+        token.column = self.token_column
         self.tokens.append(token)
 
-    def add_kw_token(self, kw: Keyword):
+    def add_kw(self, kw: Keyword):
         self.add_token(Token(TokenType.Kw, kw))
 
-    def add_op_token(self, op: Operator):
+    def add_op(self, op: Operator):
         self.add_token(Token(TokenType.Op, op))
 
     def is_skipable(self, c: str):
@@ -54,13 +57,13 @@ class Lexer:
         return c == '\n'
 
     def is_digit(self, c: str):
-        return c >= '0' and c <= '9' or c >= 'a' and c <= 'f' or c >= 'A' and c <= 'F'
+        return '0' <= c <= '9' or 'a' <= c <= 'f' or 'A' <= c <= 'F'
 
     def is_hex(self, c: str):
         return self.is_digit(c)
 
     def is_id_first(self, c: str):
-        return c >= 'a' and c <= 'z' or c >= 'A' and c <= 'Z' or c == '_'
+        return 'a' <= c <= 'z' or 'A' <= c <= 'Z' or c == '_'
 
     def is_id(self, c: str):
         return self.is_id_first(c) or self.is_digit(c)
@@ -79,9 +82,9 @@ class Lexer:
             self.advance()
             if self.peek() in {'x', 'X'}:
                 self.advance()
-                
+
                 if not self.is_hex(self.peek()):
-                    unexpected_token_error()
+                    self.unexpected_token_error()
 
                 num += self.peek()
                 while self.is_hex(self.advance()):
@@ -96,13 +99,13 @@ class Lexer:
             elif self.peek() in {'b', 'B'}:
                 self.advance()
                 if not self.is_digit(self.peek()):
-                    unexpected_token_error()
-                
-                num += peek()
+                    self.unexpected_token_error()
+
+                num += self.peek()
                 while self.is_digit(self.advance()):
                     if self.peek() not in {'0', '1'}:
                         self.error('Binary number can only contain 0 or 1')
-                    num += peek()
+                    num += self.peek()
 
                 try:
                     self.add_token(Token(TokenType.Int, int(num, 2)))
@@ -127,7 +130,7 @@ class Lexer:
             num += self.peek()
             while self.is_digit(self.advance()):
                 num += self.peek()
-            
+
             try:
                 self.add_token(Token(TokenType.Float, float(num)))
             except ValueError as e:
@@ -147,6 +150,9 @@ class Lexer:
         self.file_name = file_name
 
         while not self.eof():
+            self.token_line = self.line
+            self.token_column = self.column
+
             if self.is_skipable(self.peek()):
                 self.advance()
             elif self.is_nl(self.peek()):
@@ -154,7 +160,7 @@ class Lexer:
                 self.advance()
             elif self.is_id_first(self.peek()):
                 iden = self.peek()
-                
+
                 while self.is_id(self.advance()):
                     iden += self.peek()
 
@@ -162,21 +168,21 @@ class Lexer:
                 for name, kw in keywords.items():
                     if iden == kw:
                         if name == Keyword['Elif']:
-                            self.add_kw_token(Keyword.Else)
-                            self.add_kw_token(Keyword.If)
+                            self.add_kw(Keyword.Else)
+                            self.add_kw(Keyword.If)
                         else:
-                            self.add_kw_token(kw)
+                            self.add_kw(kw)
                         is_kw = True
 
                 if is_kw:
                     continue
 
                 if iden == 'is':
-                    self.add_op_token(Operator.Is)
+                    self.add_op(Operator.Is)
                 elif iden == 'in':
-                    self.add_op_token(Operator.In)
+                    self.add_op(Operator.In)
                 elif iden == 'as':
-                    self.add_op_token(Operator.As)
+                    self.add_op(Operator.As)
                 else:
                     self.add_token(Token(TokenType.Id, iden))
             elif self.is_digit(self.peek()):
@@ -190,7 +196,7 @@ class Lexer:
                         break
                     string += self.peek()
                     self.advance()
-                
+
                 if self.eof():
                     self.unexpected_eof_error()
                 if self.peek() != quote:
@@ -203,47 +209,47 @@ class Lexer:
 
                 if self.peek() == '=':
                     if self.peek_next() == '>':
-                        self.add_token(Operator.Arrow)
+                        self.add_op(Operator.Arrow)
                         self.advance(2)
                     elif self.peek_next() == '=':
                         if self.peek_next(2) == '=':
-                            self.add_token(Operator.RefEq)
+                            self.add_op(Operator.RefEq)
                             self.advance(3)
                         else:
-                            self.add_token(Operator.Eq)
+                            self.add_op(Operator.Eq)
                             self.advance(2)
                     else:
-                        self.add_token(Operator.Assign)
+                        self.add_op(Operator.Assign)
                         self.advance()
                 elif self.peek() == '+':
                     if self.peek_next() == '=':
-                        self.add_token(Operator.AddAssign)
+                        self.add_op(Operator.AddAssign)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.Add)
+                        self.add_op(Operator.Add)
                         self.advance()
                 elif self.peek() == '-':
                     if self.is_digit(self.peek_next()):
                         self.lex_number()
                     elif self.peek_next() == '=':
-                        self.add_token(Operator.SubAssign)
+                        self.add_op(Operator.SubAssign)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.Sub)
+                        self.add_op(Operator.Sub)
                         self.advance()
                 elif self.peek() == '*':
                     if self.peek_next() == '*':
                         if self.peek_next(2):
-                            self.add_token(Operator.ExpAssign)
+                            self.add_op(Operator.ExpAssign)
                             self.advance(3)
                         else:
-                            self.add_token(Operator.Exp)
+                            self.add_op(Operator.Exp)
                             self.advance(2)
                     elif self.peek_next() == '=':
-                        self.add_token(Operator.MulAssign)
+                        self.add_op(Operator.MulAssign)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.Mul)
+                        self.add_op(Operator.Mul)
                         self.advance()
                 elif self.peek() == '/':
                     if self.peek_next() == '/':
@@ -258,108 +264,109 @@ class Lexer:
                                 break
                         self.advance(2)
                     elif self.peek_next() == '=':
-                        self.add_token(Operator.DivAssign)
+                        self.add_op(Operator.DivAssign)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.Div)
+                        self.add_op(Operator.Div)
                 elif self.peek() == '%':
                     if self.peek_next() == '=':
-                        self.add_token(Operator.ModAssign)
+                        self.add_op(Operator.ModAssign)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.Mod)
+                        self.add_op(Operator.Mod)
                         self.advance()
                 elif self.peek() == ';':
-                    self.add_token(Operator.Semi)
+                    self.add_op(Operator.Semi)
                     self.advance()
                 elif self.peek() == '(':
-                    self.add_token(Operator.LParen)
+                    self.add_op(Operator.LParen)
                     self.advance()
                 elif self.peek() == ')':
-                    self.add_token(Operator.RParen)
+                    self.add_op(Operator.RParen)
                     self.advance()
                 elif self.peek() == '{':
-                    self.add_token(Operator.LBrace)
+                    self.add_op(Operator.LBrace)
                     self.advance()
                 elif self.peek() == '}':
-                    self.add_token(Operator.RBrace)
+                    self.add_op(Operator.RBrace)
                     self.advance()
                 elif self.peek() == '[':
-                    self.add_token(Operator.LBracket)
+                    self.add_op(Operator.LBracket)
                     self.advance()
                 elif self.peek() == ']':
-                    self.add_token(Operator.RBracket)
+                    self.add_op(Operator.RBracket)
                     self.advance()
                 elif self.peek() == ',':
-                    self.add_token(Operator.Comma)
+                    self.add_op(Operator.Comma)
                     self.advance()
                 elif self.peek() == ':':
-                    self.add_token(Operator.Colon)
+                    self.add_op(Operator.Colon)
                     self.advance()
                 elif self.peek() == '.':
                     if self.is_digit(self.peek_next()):
                         self.lex_number()
                     elif self.peek_next() == '.':
                         if self.peek_next(2) == '<':
-                            self.add_token(Operator.RangeRE)
+                            self.add_op(Operator.RangeRE)
                             self.advance(3)
                         else:
-                            self.add_token(Operator.Range)
+                            self.add_op(Operator.Range)
                             self.advance(2)
                     else:
-                        self.add_token(Operator.Dot)
+                        self.add_op(Operator.Dot)
                         self.advance()
                 elif self.peek() == '&':
                     if self.peek_next() == '&':
-                        self.add_token(Operator.And)
+                        self.add_op(Operator.And)
                         self.advance(2)
                     else:
                         self.unexpected_token_error()
                 elif self.peek() == '!':
                     if self.peek_next() == 'i' and self.peek_next(2) == 's':
-                        self.add_token(Operator.NotIs)
+                        self.add_op(Operator.NotIs)
                         self.advance(3)
                     elif self.peek_next() == 'i' and self.peek_next(2) == 'n':
-                        self.add_token(Operator.NotIn)
+                        self.add_op(Operator.NotIn)
                         self.advance(3)
                     else:
-                        self.add_token(Operator.Not)
+                        self.add_op(Operator.Not)
                         self.advance()
                 elif self.peek() == '|':
                     if self.peek_next() == '|':
-                        self.add_token(Operator.Or)
+                        self.add_op(Operator.Or)
                         self.advance(2)
                     elif self.peek_next() == '>':
-                        self.add_token(Operator.Pipe)
+                        self.add_op(Operator.Pipe)
                         self.advance(2)
                     else:
                         self.unexpected_token_error()
                 elif self.peek() == '<':
                     if self.peek_next() == '=':
-                        self.add_token(Operator.LE)
+                        self.add_op(Operator.LE)
                         self.advance(2)
                     else:
-                        self.add_token(Operator.LT)
+                        self.add_op(Operator.LT)
                         self.advance()
                 elif self.peek() == '>':
                     if self.peek_next() == '=':
-                        self.add_token(Operator.GE)
+                        self.add_op(Operator.GE)
                         self.advance(2)
                     elif self.peek_next() == '.':
                         if self.peek_next() == '.':
-                            self.add_token(Operator.RangeLE)
+                            self.add_op(Operator.RangeLE)
                             self.advance(3)
                         elif self.peek_next(2) == '<':
-                            self.add_token(Operator.RangeBothE)
+                            self.add_op(Operator.RangeBothE)
                             self.advance(3)
                         else:
                             self.unexpected_token_error()
                     else:
-                        self.add_token(Operator.GT)
+                        self.add_op(Operator.GT)
                         self.advance()
                 else:
                     raise Exception('Unknown token ' + self.peek())
 
+        self.add_token(Token(TokenType.Eof, None))
 
         return self.tokens
 
@@ -370,4 +377,4 @@ class Lexer:
         self.error('Unexpected end of file')
 
     def error(self, msg):
-        raise Exception(msg +'\n'+ self.file_name +':'+ pos_to_str(self.line, self.column))
+        raise Exception(msg + '\n' + self.file_name + ':' + pos_to_str(self.line, self.column))
