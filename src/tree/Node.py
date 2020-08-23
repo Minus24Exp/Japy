@@ -1,3 +1,3 @@
 class Node:
-    def visit(self):
+    def visit(self, compiler):
         raise Exception('Attempt to visit base Node')

@@ -104,7 +104,7 @@ class Parser:
         self.index = 0
         self.tokens = tokens
         self.tree = []
-        virtual_semi = False
+        self.virtual_semi = False
 
         while not self.eof():
             self.skip_nl(True)

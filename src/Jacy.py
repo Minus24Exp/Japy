@@ -1,5 +1,7 @@
 import sys
 import os.path
+
+from .compiler.Compiler import Compiler
 from .parser.Lexer import Lexer
 from .parser.Parser import Parser, JacyError
 
@@ -10,10 +12,12 @@ class Jacy:
 
     lexer: Lexer
     parser: Parser
+    compiler: Compiler
 
     def __init__(self):
         self.lexer = Lexer()
         self.parser = Parser()
+        self.compiler = Compiler()
 
     def launch(self):
         script_argv = []
@@ -62,3 +66,4 @@ class Jacy:
         for t in tokens:
             print(str(t))
         tree = self.parser.parse(tokens)
+        self.compiler.eval(tree)

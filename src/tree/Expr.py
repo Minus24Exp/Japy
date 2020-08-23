@@ -4,7 +4,7 @@ from ..errors import *
 
 
 class Expr(Node):
-    def visit(self):
+    def visit(self, compiler):
         raise Exception('Attempt to visit base Expression')
 
 
@@ -14,16 +14,16 @@ class Assign(Expr):
         self.value = value
         self.assign_op = assign_op
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_assign(self)
 
 
 class DictExpr(Expr):
     def __init__(self, elements):
         self.elements = elements
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_dict_expr(self)
 
 
 class FuncCall(Expr):
@@ -31,8 +31,8 @@ class FuncCall(Expr):
         self.left = left
         self.args = args
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_func_call(self)
 
 
 class GetExpr(Expr):
@@ -40,8 +40,8 @@ class GetExpr(Expr):
         self.left = left
         self.iden = iden
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_get_expr(self)
 
 
 class GetItem(Expr):
@@ -49,8 +49,8 @@ class GetItem(Expr):
         self.left = left
         self.index = index
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_get_item(self)
 
 
 class Identifier(Expr):
@@ -62,6 +62,9 @@ class Identifier(Expr):
     def get_name(self):
         return self.token.val
 
+    def visit(self, compiler):
+        compiler.visit_id(self)
+
 
 class IfExpr(Expr):
     def __init__(self, cond, if_branch, else_branch):
@@ -69,8 +72,8 @@ class IfExpr(Expr):
         self.if_branch = if_branch
         self.else_branch = else_branch
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_if_expr(self)
 
 
 class Infix(Expr):
@@ -79,24 +82,24 @@ class Infix(Expr):
         self.op_token = op_token
         self.right = right
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_infix(self)
 
 
 class ListExpr(Expr):
     def __init__(self, elements):
         self.elements = elements
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_list_expr(self)
 
 
 class Null(Expr):
     def __init__(self):
         pass
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_null(self)
 
 
 class Bool(Expr):
@@ -105,8 +108,8 @@ class Bool(Expr):
             raise DevError('Attempt to create Bool with non-bool token')
         self.token = token
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_bool(self)
 
 
 class Int(Expr):
@@ -115,8 +118,8 @@ class Int(Expr):
             raise DevError('Attempt to create Int with non-int token')
         self.token = token
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_int(self)
 
 
 class Float(Expr):
@@ -125,8 +128,8 @@ class Float(Expr):
             raise DevError('Attempt to create Float with non-float token')
         self.token = token
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_float(self)
 
 
 class String(Expr):
@@ -135,8 +138,8 @@ class String(Expr):
             raise DevError('Attempt to create String with non-string token')
         self.token = token
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_string(self)
 
 
 class Prefix(Expr):
@@ -144,8 +147,9 @@ class Prefix(Expr):
         self.op_token = op_token
         self.right = right
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_prefix(self)
+
 
 class SetExpr(Expr):
     def __init__(self, left, iden, value):
@@ -153,8 +157,8 @@ class SetExpr(Expr):
         self.iden = iden
         self.value = value
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_set_expr(self)
 
 
 class SetItem(Expr):
@@ -163,5 +167,5 @@ class SetItem(Expr):
         self.index = index
         self.value = value
 
-    def visit(self):
-        pass
+    def visit(self, compiler):
+        compiler.visit_set_item(self)
